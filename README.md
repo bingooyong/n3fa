@@ -1,9 +1,19 @@
-# n3fa
+# Name
+***
+n3fa is a Web Analytics
 
 
+# Tools
+***
+
+* redis的jui操作界面 [redis-commander](https://github.com/nearinfinity/redis-commander)
+
+* Lua redis client driver for the ngx_lua [lua-resty-redis](https://github.com/agentzh/lua-resty-redis)
+
+# _trackEvent
+***
 
 将RequestUrl和自定义javascript配置放在redis中
-
 
 URL匹配规则 格式 HMSET n3fa:url_configs url_regex javascript_key
 
