@@ -1,13 +1,13 @@
 # Name
 
-***
+---
 
 n3fa is a Web Analytics
 
 
 # Tools
 
-***
+---
 
 * redis的jui操作界面 [redis-commander](https://github.com/nearinfinity/redis-commander)
 
@@ -15,7 +15,7 @@ n3fa is a Web Analytics
 
 # _trackEvent
 
-***
+---
 
 将RequestUrl和自定义javascript配置放在redis中
 
