@@ -41,7 +41,7 @@
         pageViewTime = 0,
         entryTime = Math.round(+new Date / 1E3),
         httpProtocol = "https:" == document.location.protocol ? "https:" : "http:",
-        sendToServerParamNames = "cc ck cl ds ep et fl ja ln lo lt nv rnd sb se si st su sw sse v cv lv u tt".split(" ");
+        sendToServerParamNames = "cc ck cl ds ep et ec fl ja ln lo lt nv rnd sb se si st su sw sse v cv lv u tt".split(" ");
 
 
     //在a指定的url中取指定变量的值
@@ -223,6 +223,7 @@
 
     //发送数据到服务端
     function sendDataToServer(a) {
+        a.a.ec = Math.round(new Date().getTime() / 1E3);
         a.a.rnd = Math.round(2147483647 * Math.random());
         var b = httpProtocol + "//localhost:18001/1.gif?" + generateValueToServer(a);
         prepareParamUValueAndSave(a, b);
@@ -460,7 +461,12 @@
                 a.h = true, a.a.et = 0, a.a.ep = "", sendDataToServer(a)
 
         } catch (ma) {
-            a = [], a.push("si=" + _config.id), a.push("n=" + encodeURIComponent(ma.name)), a.push("m=" + encodeURIComponent(ma.message)), a.push("r=" + encodeURIComponent(document.referrer)), postDataToServer(httpProtocol + "//localhost:18001/1.gif?" + a.join("&"))
+            a = [],
+                a.push("si=" + _config.id),
+                a.push("n=" + encodeURIComponent(ma.name)),
+                a.push("m=" + encodeURIComponent(ma.message)),
+                a.push("r=" + encodeURIComponent(document.referrer)),
+                postDataToServer(httpProtocol + "//localhost:18001/1.gif?" + a.join("&"))
         }
     }
 
