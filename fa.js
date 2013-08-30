@@ -2,15 +2,13 @@
 (function () {
     var _config = {
         id: "a9e72dfe4a54a20c3d6e671b3bad01d9",
-        dm: ["10010.com"],
-        v: "0.0.1",
-        etrk: [],
-        ctrk: true,
-        align: 1,
-        nv: -1,
-        vdur: 1800, // 30分钟
-        age: 31536000000,
-        se: [
+        siteDomain: ["10010.com"],
+        version: "0.0.1",
+        elementEventMonitor: [],
+        isClickPointMonitor: true,
+        interval2NewVisit: 1800, // 30分钟
+        interval2expire: 31536000000,
+        searchEngine: [
             [1, 'baidu.com', 'word|wd|w', 1, 'news,tieba,zhidao,,image,video,hi,baike,wenku,opendata,jingyan'],
             [2, 'google.com', 'q', 0, 'tbm=isch,tbm=vid,tbm=nws|source=newssearch,tbm=blg,tbm=frm'],
             [4, 'sogou.com', 'query|keyword', 1, 'news,mp3,pic,v,gouwu,zhishi,blogsearch'],
@@ -35,7 +33,8 @@
     var isIE = /msie (\d+\.\d+)/i.test(navigator.userAgent),  // ea是否是IE
         isCookieEnabled = navigator.cookieEnabled,//ck:是否支持cookie 1:0
         isJavaEnabled = navigator.javaEnabled(),//ja:java支持 1:0
-        localLanguage = navigator.language || navigator.browserLanguage || navigator.systemLanguage || navigator.userLanguage || "",//ln:语言 zh-cn
+        localLanguage = navigator.language || navigator.browserLanguage
+            || navigator.systemLanguage || navigator.userLanguage || "",//ln:语言 zh-cn
         screenWidthAndHeight = window.screen.width + "x" + window.screen.height,//ds:屏幕尺寸
         screenColorDepth = window.screen.colorDepth,//cl:颜色深度
         pageViewTime = 0,
@@ -43,41 +42,35 @@
         httpProtocol = "https:" == document.location.protocol ? "https:" : "http:",
         sendToServerParamNames = "cc ck cl ds ep et ec fl ja ln lo lt nv rnd sb se si st su sw sse v cv lv u tt".split(" ");
 
-
-    //在a指定的url中取指定变量的值
-    function getKeyWordFromURL(url, parameter) {
+    function getParameterFromUrl(url, parameter) {
         var matchResult = url.match(new RegExp("(^|&|\\?|#)(" + parameter + ")=([^&#]*)(&|$|#)", ""));
         return matchResult ? matchResult[3] : null
     }
 
-    //删除url中的http协议和端口号
     function deleteHttpAndPortForURL(url) {
         return (url = (url = url.match(/^(https?:\/\/)?([^\/\?#]*)/)) ? url[2].replace(/.*@/, "") : null)
             ? url.replace(/:\d+$/, "") : url
     }
 
-    //SessionStorage存储
     function setSessionStorage(name, value) {
         if (window.sessionStorage)
             try {
                 window.sessionStorage.setItem(name, value)
-            } catch (d) {
+            } catch (exception) {
             }
     }
 
-    //SessionStorage取值
     function getSessionStorage(name) {
         return window.sessionStorage ? window.sessionStorage.getItem(name) : null
     }
 
-    //设置cookie
     function setCookie(name, value, option) {
         var expiresDate;
-        option.g && (expiresDate = new Date(), expiresDate.setTime(expiresDate.getTime() + option.g));
+        option.expires && (expiresDate = new Date(), expiresDate.setTime(expiresDate.getTime() + option.expires));
         document.cookie = name + "=" + value + (option.domain ? "; domain=" + option.domain : "")
             + (option.path ? "; path=" + option.path : "")
             + (expiresDate ? "; expires=" + expiresDate.toGMTString() : "")
-            + (option.p ? "; secure" : "")
+            + (option.secure ? "; secure" : "")
     }
 
 
@@ -90,14 +83,13 @@
                 pageLocalStore = document.createElement("input"), pageLocalStore.type = "hidden",
                     pageLocalStore.style.display = "none", pageLocalStore.addBehavior("#default#userData"),
                     document.getElementsByTagName("head")[0].appendChild(pageLocalStore)
-            } catch (a) {
+            } catch (exception) {
                 return false
             }
         }
         return true
     }
 
-    //LocalStorage存储
     function setLocalStorage(name, value, expireTime) {
         var _expireTime = new Date;
         _expireTime.setTime(_expireTime.getTime() + expireTime || 31536E6);
@@ -107,11 +99,10 @@
                 pageLocalStore.load(document.location.hostname),
                 pageLocalStore.setAttribute(name, value),
                 pageLocalStore.save(document.location.hostname))
-        } catch (f) {
+        } catch (exception) {
         }
     }
 
-    //LocalStorage取值
     function getLocalStorage(name) {
         if (window.localStorage) {
             if (name = window.localStorage.getItem(name)) {
@@ -121,47 +112,46 @@
         } else if (localStoreAdapter()) {
             try {
                 return pageLocalStore.load(document.location.hostname), pageLocalStore.getAttribute(name)
-            } catch (e) {
+            } catch (exception) {
             }
         }
         return null
     }
 
-    //cookie中取值，否则去浏览器存储中取值，无值时返回空
     function getData(name) {
         try {
-            var b = new RegExp("(^| )" + name + "=([^;]*)(;|$)").exec(document.cookie);
-            return (b ? b[2] : null) || getSessionStorage(name) || getLocalStorage(name)
-        } catch (d) {
+            var cookieValues = new RegExp("(^| )" + name + "=([^;]*)(;|$)").exec(document.cookie);
+            return (cookieValues ? cookieValues[2] : null) || getSessionStorage(name) || getLocalStorage(name)
+        } catch (exception) {
         }
         return null;
     }
 
-    //存储值，cookie必存，本地和session选择存储。 本地格式： 一年后的时间|当前时间
     function setData(name, value, expireTime) {
         try {
-            setCookie(name, value, {domain: findSecondDomainNameUseHostName(), path: findDomainNameUseHref(), g: expireTime}), expireTime
-                ? setLocalStorage(name, value, expireTime)
-                : setSessionStorage(name, value)
-        } catch (e) {
+            setCookie(name, value, {
+                domain: findSecondDomainNameUseHostName(),
+                path: findDomainNameUseHref(),
+                expires: expireTime
+            });
+            expireTime ? setLocalStorage(name, value, expireTime) : setSessionStorage(name, value)
+        } catch (exception) {
         }
     }
 
-    //增加对象事件
-    function addEvent(a, b, d) {
-        a.attachEvent ? a.attachEvent("on" + b, function (b) {
-            d.call(a, b)
-        }) : a.addEventListener && a.addEventListener(b, d, false)
+    function addEvent(element, type, eventFunction) {
+        element.attachEvent ? element.attachEvent("on" + type, function (b) {
+            eventFunction.call(element, b)
+        }) : element.addEventListener && element.addEventListener(type, eventFunction, false)
     }
 
-
-    // 生成发送到服务端的数据
-    function generateValueToServer(a) {
-        for (var b = [], d = 0, e = sendToServerParamNames.length; d < e; d++) {
-            var f = sendToServerParamNames[d], m = a.a[f];
-            "undefined" != typeof m && "" !== m && b.push(f + "=" + encodeURIComponent(m))
+    function generateValueToServer(_fa) {
+        for (var valuesToSend = [], i = 0, length = sendToServerParamNames.length; i < length; i++) {
+            var parameter = sendToServerParamNames[i], parameterValue = _fa.a[parameter];
+            "undefined" != typeof parameterValue && "" !== parameterValue
+            && valuesToSend.push(parameter + "=" + encodeURIComponent(parameterValue))
         }
-        return b.join("&")
+        return valuesToSend.join("&")
     }
 
     //提交浏览器中存储数据到服务端 a.nv=0时执行，刷新时没有大于半小时
@@ -169,7 +159,8 @@
         var unsentData = getSessionStorage("_n3fa_unsent_" + _config.id);
         if (unsentData) {
             for (var a = unsentData.split(","), b = 0, d = a.length; b < d; b++) {
-                postDataToServer(httpProtocol + "//" + decodeURIComponent(a[b]).replace(/^https?:\/\//, ""), function (a) {
+                var _url = httpProtocol + "//" + decodeURIComponent(a[b]).replace(/^https?:\/\//, "");
+                postDataToServer(_url, function (a) {
                     removeOldValueAndSaveNewValue(a)
                 })
             }
@@ -177,9 +168,8 @@
 
     }
 
-    //图片请求向服务器提交数据
     function postDataToServer(url, callback) {
-        var img = new Image, e = "n3fa_image_log" + Math.floor(2147483648 * Math.random()).toString(36);
+        var img = new Image, e = "_n3fa_image_log" + Math.floor(2147483648 * Math.random()).toString(36);
         window[e] = img;// 全局变量，保证不会被回收
         img.onload = img.onerror = img.onabort = function () {
             img.onload = img.onerror = img.onabort = null;
@@ -190,16 +180,16 @@
     }
 
     //--
-    //处理Hm_unsent_中旧值并存储新值，第一次进入a=.*
+    //处理_n3fa_unsent_中旧值并存储新值，第一次进入a=.*
     //在页面被关闭前会存入url值。然后会发送数据到服务端，成功后会和以前保存的值进行匹配，匹配成功后还有值则存起来，无值时则会清空未发送值。
     //第二次进入该页面不一定有值，当有值时还是需要传到服务端的。
-    function removeOldValueAndSaveNewValue(a) {
+    function removeOldValueAndSaveNewValue(postUrl) {
         var unsentData = getSessionStorage("_n3fa_unsent_" + _config.id) || "";
         unsentData && (
             (unsentData = unsentData.replace(
                     new RegExp(
                         encodeURIComponent(
-                            a.replace(/^https?:\/\//, "")     //http议去掉
+                            postUrl.replace(/^https?:\/\//, "")     //http议去掉
                         ).replace(
                                 /([\*\(\)])/g, "\\$1"  //*()替换为\$1
                             ) + "(%26u%3D[^,]*)?,?", "g"), "") //加上&u=[^,]*   以&u为参数到,结尾，其实就是界限
@@ -212,41 +202,41 @@
 
 
     //--在指定URL中增加U值，把最新的值插入到_n3fa_unsent_中存储值前面并保存
-    function prepareParamUValueAndSave(a, b) {
+    function prepareParamUValueAndSave(_fa, postUrl) {
+        var href = _fa.a.u ? "" : "&u=" + encodeURIComponent(document.location.href);
         var unsentData = getSessionStorage("_n3fa_unsent_" + _config.id) || "";
-        var e = a.a.u ? "" : "&u=" + encodeURIComponent(document.location.href);
-        unsentData = encodeURIComponent(b.replace(/^https?:\/\//, "") + e) + (unsentData ? "," + unsentData : "");
+        unsentData = encodeURIComponent(postUrl.replace(/^https?:\/\//, "") + href) + (unsentData ? "," + unsentData : "");
         //关闭前可能这些数据发不了，这样留在用户下次登陆相关页面时发送。
         setSessionStorage("_n3fa_unsent_" + _config.id, unsentData)
     }
 
-
-    //发送数据到服务端
-    function sendDataToServer(a) {
-        a.a.ec = Math.round(new Date().getTime() / 1E3);
-        a.a.rnd = Math.round(2147483647 * Math.random());
-        var b = httpProtocol + "//localhost:18001/1.gif?" + generateValueToServer(a);
-        prepareParamUValueAndSave(a, b);
-        postDataToServer(b, function (a) {
-            removeOldValueAndSaveNewValue(a)
+    function sendDataToServer(_fa) {
+        _fa.a.ec = Math.round(new Date().getTime() / 1E3);
+        _fa.a.rnd = Math.round(2147483647 * Math.random());
+        var postUrl = httpProtocol + "//localhost:18001/1.gif?" + generateValueToServer(_fa);
+        prepareParamUValueAndSave(_fa, postUrl);
+        postDataToServer(postUrl, function (url) {
+            removeOldValueAndSaveNewValue(url)
         })
     }
 
-
-    //计算时间并发送数据到服务端
-    function beforeUnload(a) {
+    function sendDataToServerWhenBeforeUnload(_fa) {
         return function () {
-            a.a.nv = 0;
-            a.a.st = 4;
-            a.a.et = 3;
-            a.a.ep = (new Date).getTime() - a.f.m + "," + ((new Date).getTime() - a.f.e + a.f.i);
-            sendDataToServer(a)
+            _fa.a.nv = 0;
+            _fa.a.st = 4;
+            _fa.a.et = 3;
+            _fa.a.ep = (new Date).getTime() - _fa.f.m + "," + ((new Date).getTime() - _fa.f.e + _fa.f.i);
+            sendDataToServer(_fa)
         }
     }
 
-    //所在搜索引擎的频道
+    function sendDataToServerWhenTrackStackFull(_fa) {
+        if (0 != _fa.trackStack.length)
+            _fa.a.et = 2, _fa.a.ep = "[" + _fa.trackStack.join(",") + "]", sendDataToServer(_fa), _fa.trackStack = []
+    }
+
     function findSearchEngineChannel(index) {
-        for (var n = _config.se[index], sse = 0, Ba = 2 == n[3] ? n[1] + "\\/" : "", Ca = 1 == n[3] ? "\\." +
+        for (var n = _config.searchEngine[index], sse = 0, Ba = 2 == n[3] ? n[1] + "\\/" : "", Ca = 1 == n[3] ? "\\." +
             n[1] : "", V = n[4].split(","), n = 0, Da = V.length; n < Da; n++) {
             if ("" !== V[n] && new RegExp(Ba + V[n] + Ca).test(document.referrer)) {
                 sse = n + 1;
@@ -258,30 +248,31 @@
 
     //当前网站是否和指定域名列表中的相同，相同返回域名，不同则返回“/”
     function findDomainNameUseHref() {
-        for (var a = 0, b = _config.dm.length; a < b; a++) {
-            var d = _config.dm[a];
-            if (-1 < d.indexOf("/") && isSameDomain(document.location.href, d))
-                return d.replace(/^[^\/]+(\/.*)/, "$1") + "/"
+        for (var i = 0, length = _config.siteDomain.length; i < length; i++) {
+            var _domain = _config.siteDomain[i];
+            if (-1 < _domain.indexOf("/") && isSameDomain(document.location.href, _domain))
+                return _domain.replace(/^[^\/]+(\/.*)/, "$1") + "/"
         }
         return "/"
     }
 
     //在指定的查找二级域名，找不到返回window.location.hostname
     function findSecondDomainNameUseHostName() {
-        for (var a = document.location.hostname, b = 0, d = _config.dm.length; b < d; b++)
-            if (isSecondDomain(a, _config.dm[b]))
-                return _config.dm[b].replace(/(:\d+)?[\/\?#].*/, "");
-        return a
+        for (var _hostname = document.location.hostname, i = 0, length = _config.siteDomain.length; i < length; i++)
+            if (isSecondDomain(_hostname, _config.siteDomain[i]))
+                return _config.siteDomain[i].replace(/(:\d+)?[\/\?#].*/, "");
+        return _hostname
     }
 
     //二级域名或者是相同域名
     function isSameDomainOrSecondDomain(referrer) {
-        for (var b = 0; b < _config.dm.length; b++) {
-            if (-1 < _config.dm[b].indexOf("/")) {
-                if (isSameDomain(referrer, _config.dm[b])) return true
+        for (var i = 0; i < _config.siteDomain.length; i++) {
+            var _domain = _config.siteDomain[i];
+            if (-1 < _domain.indexOf("/")) {
+                if (isSameDomain(referrer, _domain)) return true
             } else {
-                var d = deleteHttpAndPortForURL(referrer);
-                if (d && isSecondDomain(d, _config.dm[b])) return true
+                var refererWithoutHttpAndPort = deleteHttpAndPortForURL(referrer);
+                if (refererWithoutHttpAndPort && isSecondDomain(refererWithoutHttpAndPort, _domain)) return true
             }
         }
         return false;
@@ -304,15 +295,28 @@
     function removeCookieAndLocalValue() {
         var a = "_n3fa_cv_" + _config.id;
         try {
-            if (setCookie(a, "", {domain: findSecondDomainNameUseHostName(), path: findDomainNameUseHref(), g: -1}), window.sessionStorage && window.sessionStorage.removeItem(a), window.localStorage)
+            if (setCookie(a, "", {
+                domain: findSecondDomainNameUseHostName(),
+                path: findDomainNameUseHref(),
+                expires: -1
+            }), window.sessionStorage && window.sessionStorage.removeItem(a), window.localStorage) {
                 window.localStorage.removeItem(a);
-            else if (localStoreAdapter())
+            }
+            else if (localStoreAdapter()) {
                 try {
-                    pageLocalStore.load(document.location.hostname), pageLocalStore.removeAttribute(a), pageLocalStore.save(document.location.hostname)
-                } catch (b) {
+                    pageLocalStore.load(document.location.hostname);
+                    pageLocalStore.removeAttribute(a);
+                    pageLocalStore.save(document.location.hostname);
+                } catch (exception) {
                 }
-        } catch (d) {
+            }
+        } catch (exception) {
         }
+    }
+
+    //2=google 14=so.com 17=etao.com
+    function notEmptyKeyWordsOrNotSpecifySearchEngine(keywords, searchEngineId) {
+        return keywords || !(2 != searchEngineId && 14 != searchEngineId && 17 != searchEngineId);
     }
 
     /**
@@ -328,17 +332,18 @@
      */
     function pageEnterType(a, lastVisitTime) {
         if (!document.referrer) {
-            return entryTime - lastVisitTime > _config.vdur ? 1 : 4;
+            return entryTime - lastVisitTime > _config.interval2NewVisit ? 1 : 4;
         }
 
-        for (var p = 0, za = _config.se.length; p < za; p++) {
-            if (new RegExp("(^|\\.)" + _config.se[p][1].replace(/\./g, "\\.")).test(deleteHttpAndPortForURL(document.referrer))) {
-                var keywords = getKeyWordFromURL(document.referrer, _config.se[p][2]) || "";
-                //2=google 14=so.com 17=etao.com
-                if (keywords || !(2 != _config.se[p][0] && 14 != _config.se[p][0] && 17 != _config.se[p][0])) {
+        for (var p = 0, za = _config.searchEngine.length; p < za; p++) {
+            var referrerRegExp = new RegExp("(^|\\.)" + _config.searchEngine[p][1].replace(/\./g, "\\."));
+            if (referrerRegExp.test(deleteHttpAndPortForURL(document.referrer))) {
+                var keywords = getParameterFromUrl(document.referrer, _config.searchEngine[p][2]) || "";
+                var searchEngineId = _config.searchEngine[p][0];
+                if (notEmptyKeyWordsOrNotSpecifySearchEngine(keywords, searchEngineId)) {
                     //cpro.baidu.com是百度网盟的来源，如果是网盟则keywords为空
-                    1 == _config.se[p][0] && -1 < document.referrer.indexOf("cpro.baidu.com") && (keywords = "");
-                    a.a.se = _config.se[p][0];//搜索引擎ID
+                    1 == searchEngineId && -1 < document.referrer.indexOf("cpro.baidu.com") && (keywords = "");
+                    a.a.se = searchEngineId;//搜索引擎ID
                     a.a.sse = findSearchEngineChannel(p); //搜索引擎的频道
                     a.a.sw = keywords;//搜索关键字
                     return 2;
@@ -349,9 +354,10 @@
         var referrerWithoutHttpAndPort = "", _isSameDomainOrSecondDomain = false;
         isSameDomainOrSecondDomain(document.referrer) && isSameDomainOrSecondDomain(document.location.href)
             ? _isSameDomainOrSecondDomain = true
-            : (referrerWithoutHttpAndPort = deleteHttpAndPortForURL(document.referrer), _isSameDomainOrSecondDomain = isSecondDomain(referrerWithoutHttpAndPort || "", document.location.hostname));
+            : (referrerWithoutHttpAndPort = deleteHttpAndPortForURL(document.referrer),
+            _isSameDomainOrSecondDomain = isSecondDomain(referrerWithoutHttpAndPort || "", document.location.hostname));
 
-        return _isSameDomainOrSecondDomain ? (entryTime - lastVisitTime > _config.vdur ? 1 : 4) : 3;
+        return _isSameDomainOrSecondDomain ? (entryTime - lastVisitTime > _config.interval2NewVisit ? 1 : 4) : 3;
     }
 
     function flashVersion() {
@@ -362,20 +368,44 @@
         } else if (window.ActiveXObject) {
             try {
                 var ia = new ActiveXObject("ShockwaveFlash.ShockwaveFlash");
-                ia && (flashVersion = ia.GetVariable("$version")) && (flashVersion = flashVersion.replace(/^.*\s+(\d+),(\d+).*$/, "$1.$2"))
-            } catch (La) {
+                ia && (flashVersion = ia.GetVariable("$version"))
+                && (flashVersion = flashVersion.replace(/^.*\s+(\d+),(\d+).*$/, "$1.$2"))
+            } catch (exception) {
             }
         }
         return flashVersion;
     }
 
-    function start(a) {
+    function loadN3faConfig() {
+        var _n3faObj = window._n3fa;
+        if (!(_n3faObj && _n3faObj.length)) return;
+        for (var i = 0, length = _n3faObj.length; i < length; i++) {
+            var n3faApi = _n3faObj[i];
+            switch (n3faApi[0]) {
+                case "_setAccount":
+                    1 < n3faApi.length && /^[0-9a-z]{32}$/.test(n3faApi[1]) && (window._n3fa_account = n3faApi[1]);
+                    break;
+                case "_setAutoPageview":
+                    if (1 < n3faApi.length) {
+                        var isAutoPageView = n3faApi[1];
+                        if (false === isAutoPageView || true === isAutoPageView)
+                            window._n3fa_autoPageview = isAutoPageView
+                    }
+            }
+        }
+    }
+
+    function sendDataToServerWhenPageView(_fa) {
+        _fa.a.et = 0, _fa.a.ep = "", sendDataToServer(_fa)
+    }
+
+    function start(_fa) {
         try {
             var isNewVisit, enterType, isSavedEntryTime, lastVisitTime, m, visitTimesStored, visitTimesArray;
             pageViewTime = getData("_n3fa_lpvt_" + _config.id) || 0;
             13 == pageViewTime.length && (pageViewTime = Math.round(pageViewTime / 1E3));
 
-            enterType = pageEnterType(a, pageViewTime);
+            enterType = pageEnterType(_fa, pageViewTime);
             //页面进入类型
             isNewVisit = 4 != enterType ? 1 : 0;
             //localstorage中取
@@ -387,115 +417,96 @@
                 for (; 2592E3 < entryTime - visitTimesArray[0];)
                     visitTimesArray.shift();
                 m = 4 > visitTimesArray.length ? 2 : 3;
-                for (1 === isNewVisit && visitTimesArray.push(entryTime); 4 < visitTimesArray.length;)visitTimesArray.shift();
+                for (1 === isNewVisit && visitTimesArray.push(entryTime); 4 < visitTimesArray.length;)
+                    visitTimesArray.shift();
                 visitTimesStored = visitTimesArray.join(",");
                 lastVisitTime = visitTimesArray[visitTimesArray.length - 1]
             } else {
                 visitTimesStored = entryTime, lastVisitTime = "", m = 1;
             }
 
-            setData("_n3fa_lvt_" + _config.id, visitTimesStored, _config.age);   // localstorage中存储
+            setData("_n3fa_lvt_" + _config.id, visitTimesStored, _config.interval2expire);   // localstorage中存储
             setData("_n3fa_lpvt_" + _config.id, entryTime); // sessionstorage中存
             isSavedEntryTime = entryTime == getData("_n3fa_lpvt_" + _config.id) ? "1" : "0"; // EntryTime是否存储成功
 
-            if (0 == _config.nv && isSameDomainOrSecondDomain(document.location.href)
-                && ("" == document.referrer || isSameDomainOrSecondDomain(document.referrer)))
-                isNewVisit = 0, enterType = 4;
-
-            a.a.nv = isNewVisit;                   // 是否是一个新的VV
-            a.a.st = enterType;                    // 页面进入类型（1,2,3,4）
-            a.a.cc = isSavedEntryTime;             // EntryTime是否存储成功
-            a.a.lt = lastVisitTime;                // VV进入时间，半小时内不变
-            a.a.lv = m;                            // 1：第一次进入，2：30天内少于4次，3：30天内不小于4次
-            a.a.si = _config.id;                   // 统计网站的ID
-            a.a.su = document.referrer;            // http header referer
-            a.a.ds = screenWidthAndHeight;         // 屏幕尺寸,如 ’1024×768′
-            a.a.cl = screenColorDepth + "-bit";    // 颜色深度,如 “32-bit”
-            a.a.ln = localLanguage;                // 语言,zh-cn
-            a.a.ja = isJavaEnabled ? 1 : 0;        // java支持,1:0
-            a.a.ck = isCookieEnabled ? 1 : 0;      // cookie支持,1:0
-            a.a.fl = flashVersion();               // flash版本
-            a.a.v = _config.v;                     // 版本号
-            a.a.cv = decodeURIComponent(getData("_n3fa_cv_" + _config.id) || ""); // _setCustomVar 的值
-            1 == a.a.nv && (a.a.tt = document.title || ""); // 页面的title 只有是新的VV时才统计
+            _fa.a.nv = isNewVisit;                   // 是否是一个新的VV
+            _fa.a.st = enterType;                    // 页面进入类型（1,2,3,4）
+            _fa.a.cc = isSavedEntryTime;             // EntryTime是否存储成功
+            _fa.a.lt = lastVisitTime;                // VV进入时间，半小时内不变
+            _fa.a.lv = m;                            // 1：第一次进入，2：30天内少于4次，3：30天内不小于4次
+            _fa.a.si = _config.id;                   // 统计网站的ID
+            _fa.a.su = document.referrer;            // http header referer
+            _fa.a.ds = screenWidthAndHeight;         // 屏幕尺寸,如 ’1024×768′
+            _fa.a.cl = screenColorDepth + "-bit";    // 颜色深度,如 “32-bit”
+            _fa.a.ln = localLanguage;                // 语言,zh-cn
+            _fa.a.ja = isJavaEnabled ? 1 : 0;        // java支持,1:0
+            _fa.a.ck = isCookieEnabled ? 1 : 0;      // cookie支持,1:0
+            _fa.a.fl = flashVersion();               // flash版本
+            _fa.a.v = _config.version;               // 版本号
+            _fa.a.cv = decodeURIComponent(getData("_n3fa_cv_" + _config.id) || ""); // _setCustomVar 的值
+            1 == _fa.a.nv && (_fa.a.tt = document.title || ""); // 页面的title 只有是新的VV时才统计
 
             //进入类型不一样，调用方法不一样。第一次输入域名进入为1,第二次未超过半小时nv=0
             //只有页面进入方式为4时,才需要处理历史数据
             //a.RemoveOldValueAndSaveNewValue_l(".*");
-            0 == a.a.nv ? postSessionStorageDataToServer() : removeOldValueAndSaveNewValue(".*");
+            0 == _fa.a.nv ? postSessionStorageDataToServer() : removeOldValueAndSaveNewValue(".*");
 
-            a.addEventForDocumentObject && a.addEventForDocumentObject();
-            a.addMouseupAndBeforeUnloadEventForDocument && a.addMouseupAndBeforeUnloadEventForDocument();
-            a.f = new AddFocusAndBlurEventForWindow;
+            _fa.addEventForDocumentObject && _fa.addEventForDocumentObject();
+            _fa.addMouseupAndBeforeUnloadEventForDocument && _fa.addMouseupAndBeforeUnloadEventForDocument();
+            _fa.f = new AddFocusAndBlurEventForWindow;
 
-            addEvent(window, "beforeunload", beforeUnload(a)); // 页面离开事件
+            addEvent(window, "beforeunload", sendDataToServerWhenBeforeUnload(_fa)); // 页面离开事件
+            loadN3faConfig(); // 处理存储在window._n3fa中的值
 
-            //处理存储在window._n3fa中的值
-            var faConfig = window._n3fa;
-            if (faConfig && faConfig.length)
-                for (var v = 0; v < faConfig.length; v++) {
-                    var faConfigApiItem = faConfig[v];
-                    switch (faConfigApiItem[0]) {
-                        case "_setAccount":
-                            1 < faConfigApiItem.length && /^[0-9a-z]{32}$/.test(faConfigApiItem[1]) && (window._n3fa_account = faConfigApiItem[1]);
-                            break;
-                        case "_setAutoPageview":
-                            if (1 < faConfigApiItem.length) {
-                                var isAutoPageView = faConfigApiItem[1];
-                                if (false === isAutoPageView || true === isAutoPageView) window._n3fa_autoPageview = isAutoPageView
-                            }
-                    }
-                }
 
             if ("undefined" === typeof window._n3fa_account || window._n3fa_account === _config.id) {
                 window._n3fa_account = _config.id;
-                var O = window._n3fa;
-                if (O && O.length)
-                    for (var x = 0, Ha = O.length; x < Ha; x++)
-                        a.prepareObjectArray(O[x]);
-                window._n3fa = a.o
+                if (window._n3fa && window._n3fa.length)
+                    for (var i = 0, length = window._n3fa.length; i < length; i++)
+                        _fa.prepareObjectArray(window._n3fa[i]);
+                window._n3fa = _fa.apiInterface
             }
 
             //未定义时则提交数据到服务端，或者_n3fa_autoPageview = true时，则提交数据到服务端
             if ("undefined" === typeof window._n3fa_autoPageview || window._n3fa_autoPageview === true)
-                a.h = true, a.a.et = 0, a.a.ep = "", sendDataToServer(a)
+                sendDataToServerWhenPageView(_fa);
 
-        } catch (ma) {
-            a = [],
-                a.push("si=" + _config.id),
-                a.push("n=" + encodeURIComponent(ma.name)),
-                a.push("m=" + encodeURIComponent(ma.message)),
-                a.push("r=" + encodeURIComponent(document.referrer)),
-                postDataToServer(httpProtocol + "//localhost:18001/1.gif?" + a.join("&"))
+        } catch (exception) {
+            _fa = [],
+                _fa.push("si=" + _config.id),
+                _fa.push("n=" + encodeURIComponent(exception.name)),
+                _fa.push("m=" + encodeURIComponent(exception.message)),
+                _fa.push("r=" + encodeURIComponent(document.referrer)),
+                postDataToServer(httpProtocol + "//localhost:18001/1.gif?" + _fa.join("&"))
         }
     }
 
 
-    function P() {
+    function Fa() {
         if ("undefined" == typeof window["_n3fa_loaded_" + _config.id]) {
             window["_n3fa_loaded_" + _config.id] = true;
-            var a = this;
-            a.a = {};
-            a.b = [];
-            a.o = {
+            var _fa = this;
+            _fa.a = {};
+            _fa.trackStack = [];
+            _fa.apiInterface = {
                 push: function () {
-                    a.prepareObjectArray.apply(a, arguments)
+                    _fa.prepareObjectArray.apply(_fa, arguments)
                 }
             };
-            a.h = false;
-            start(a)
+            start(_fa)
         }
     }
 
     //处理对象数组，首先参数是对象数组，然后根据第一个参数决定如何处理参数值
-    P.prototype.prepareObjectArray = function (a) {
+    Fa.prototype.prepareObjectArray = function (a) {
 
         var func = function (a) {
             if ("[object Array]" !== Object.prototype.toString.call(a))
                 return false;
             for (var b = a.length - 1; 0 <= b; b--) {
                 var d = a[b];
-                if (("[object Number]" !== {}.toString.call(d) || !isFinite(d)) && "[object String]" !== {}.toString.call(d) && d !== true && d !== false)
+                if (("[object Number]" !== {}.toString.call(d) || !isFinite(d))
+                    && "[object String]" !== {}.toString.call(d) && d !== true && d !== false)
                     return false
             }
             return true
@@ -508,7 +519,7 @@
             };
 
             switch (a[0]) {
-                // 支持_hmt.push(['_trackPageview', pageURL]);  http://tongji.baidu.com/open/api/more?p=ref_trackPageview
+                // 支持_n3fa.push(['_trackPageview', pageURL]);  http://tongji.baidu.com/open/api/more?p=ref_trackPageview
                 case "_trackPageview":
                     if (1 < a.length && a[1].charAt && "/" == a[1].charAt(0)) {
                         this.a.et = 0;
@@ -526,7 +537,8 @@
                 // http://tongji.baidu.com/open/api/more?p=ref_trackEvent
                 case "_trackEvent":
                     2 < a.length && (this.a.nv = 0, this.a.st = 4, this.a.et = 4, this.a.ep = (a[1]) + "*" +
-                        escapeSpecialChar(a[2]) + (a[3] ? "*" + escapeSpecialChar(a[3]) : "") + (a[4] ? "*" + escapeSpecialChar(a[4]) : ""), sendDataToServer(this));
+                        escapeSpecialChar(a[2]) + (a[3] ? "*" + escapeSpecialChar(a[3]) : "")
+                        + (a[4] ? "*" + escapeSpecialChar(a[4]) : ""), sendDataToServer(this));
                     break;
                 case "_setCustomVar":
                     if (4 > a.length)break;
@@ -537,94 +549,114 @@
                         f[d - 1] = e + "*" + escapeSpecialChar(a[2]) + "*" + escapeSpecialChar(a[3]);
                         this.a.cv = f.join("!");
                         a = this.a.cv.replace(/[^1](\*[^!]*){2}/g, "*").replace(/((^|!)\*)+$/g, "");
-                        "" !== a ? this.setData("_n3fa_cv_" + _config.id, encodeURIComponent(a), _config.age) : removeCookieAndLocalValue()
+                        "" !== a ? this.setData("_n3fa_cv_" + _config.id, encodeURIComponent(a), _config.interval2expire)
+                            : removeCookieAndLocalValue()
                     }
             }
         }
     };
 
     //为指定页面对象增加事件
-    P.prototype.addEventForDocumentObject = function () {
-        addEvent(document, "click", eventCallBack(this));
-        for (var a = _config.etrk.length, b = 0; b < a; b++) {
-            var d = _config.etrk[b], e = document.getElementById(d.id);
-            e && addEvent(e, d.eventType, addAttributeForEventObjectAndSendData(this))
+    Fa.prototype.addEventForDocumentObject = function () {
+        addEvent(document, "click", documentClickEventCallBack(this));
+        for (var length = _config.elementEventMonitor.length, i = 0; i < length; i++) {
+            var item = _config.elementEventMonitor[i], _element = document.getElementById(item.id);
+            _element && addEvent(_element, item.eventType, addAttributeForEventObjectAndSendData(this))
         }
     };
 
+
+    function sendDataToServerWhenEvenTrigger(_fa, eventId, eventType) {
+        _fa.a.et = 1;
+        _fa.a.ep = "{id:" + eventId + ",eventType:" + eventType + "}";
+        sendDataToServer(_fa)
+    }
+
     //为事件对象增加座标属性且给参数赋值,然后把数据发到服务端,转化项目使用
-    function addAttributeForEventObjectAndSendData(a) {
-        return function (b) {
-            (b.target || b.srcElement).setAttribute("HM_fix", b.clientX + ":" + b.clientY);
-            a.a.et = 1;
-            a.a.ep = "{id:" + this.id + ",eventType:" + b.type + "}";
-            sendDataToServer(a)
+    function addAttributeForEventObjectAndSendData(_fa) {
+        return function (event) {
+            (event.target || event.srcElement).setAttribute("FA_fix", event.clientX + ":" + event.clientY);
+            sendDataToServerWhenEvenTrigger(_fa, this.id, event.type);
         }
     }
 
-    //事件委托,事件对象是指定特定事件对象时，则发送数据到服务端
-    function eventCallBack(a) {
-        return function (b) {
-            var d = b.target || b.srcElement, e = d.getAttribute("HM_fix"), f = b.clientX + ":" + b.clientY;
-            if (e && e == f)
-                d.removeAttribute("HM_fix");
-            else if (e = _config.etrk.length, 0 < e) {
-                for (f = {}; d && d != document.body;)
-                    d.id && (f[d.id] = ""), d = d.parentNode;
-                for (d = 0; d < e; d++) {
-                    var m = _config.etrk[d];
-                    f.hasOwnProperty(m.id) && (a.a.et = 1, a.a.ep = "{id:" + m.id + ",eventType:" + b.type + "}", sendDataToServer(a))
+    function documentClickEventCallBack(_fa) {
+        return function (event) {
+            var eventElement = event.target || event.srcElement,
+                eventCoordinateSaved = eventElement.getAttribute("FA_fix"),
+                eventCoordinate = event.clientX + ":" + event.clientY;
+            if (eventCoordinateSaved && eventCoordinateSaved == eventCoordinate)
+                eventElement.removeAttribute("FA_fix");
+            else if (_config.elementEventMonitor.length > 0) {
+                var eventElementsHasId = {};
+                for (; eventElement && eventElement != document.body;)
+                    eventElement.id && (eventElementsHasId[eventElement.id] = ""), eventElement = eventElement.parentNode;
+                for (var i = 0; i < _config.elementEventMonitor.length; i++) {
+                    var eid = _config.elementEventMonitor[i].id;
+                    eventElementsHasId.hasOwnProperty(eid) && sendDataToServerWhenEvenTrigger(_fa, eid, event.type);
                 }
             }
         }
     }
 
+
     //为文档对象增加mouseup和beforeunload事件
-    P.prototype.addMouseupAndBeforeUnloadEventForDocument = function () {
-        var a = this;
-        _config.ctrk && (addEvent(document, "mouseup", documentMouseupEventCallback(this)), addEvent(window, "beforeunload", function () {
-            prepareParamBAndSendDataToServer(a)
-        }), setInterval(function () {
-            prepareParamBAndSendDataToServer(a)
-        }, 6E5)); //600000,10分钟
+    Fa.prototype.addMouseupAndBeforeUnloadEventForDocument = function () {
+        var _fa = this;
+        if (!_config.isClickPointMonitor) return;
+        addEvent(document, "mouseup", documentMouseupEventCallback(this));
+        addEvent(window, "beforeunload", function () {
+            sendDataToServerWhenTrackStackFull(_fa)
+        });
+        setInterval(function () {
+            sendDataToServerWhenTrackStackFull(_fa)
+        }, 6E5);//600000,10分钟
     };
 
-    //需要跟踪转化时，处理F对象中的b值，该值存储的是事件发生的座标及发生的链接地址。如果大于10个元素或者长度大于1024，则发送数据到服务端
-    function documentMouseupEventCallback(a) {
-        return function (b) {
-            var d, e;
-            //是IE需要加上滚动高度
-            isIE ? (
-                e = Math.max(document.documentElement.scrollTop, document.body.scrollTop),
-                    d = Math.max(document.documentElement.scrollLeft, document.body.scrollLeft),
-                    d = b.clientX + d, e = b.clientY + e)
-                : (d = b.pageX, e = b.pageY);
-            var f = window.innerWidth || document.documentElement.clientWidth || document.body.offsetWidth;
-            switch (_config.align) {
-                case 1:
-                    d -= f / 2;
-                    break;
-                case 2:
-                    d -= f
-            }
-            d = "{x:" + d + ",y:" + e + ",";
-            b = b.target || b.srcElement;
-            //不是a标签触发的事件，向上找到a为止。
-            if ("a" != b.tagName.toLowerCase())a:{
-                for (e = "A"; (b = b.parentNode) && 1 == b.nodeType;)if (b.tagName ==
-                    e)break a;
-                //一直没有找到a标签，置空
-                b = null
-            }
-            b = d = b ? d + ("t:a,u:" + encodeURIComponent(b.href) + "}") : d + "t:b}";
-            //长度大于1024时直接推送b值，然后如果发现大于10个元素，推送到服务端。如果不大于1024，那么如果b中的值处理完后大于1024，则会发到服务端。
-            "" != b && (d = (httpProtocol + "//localhost:18001/1.gif?" + generateValueToServer(a).replace(/ep=[^&]*/, "ep=" + encodeURIComponent("[" + b + "]"))).length, 1024 < d + 10 || (1024 < d + encodeURIComponent(a.b.join(",") + (a.b.length ? "," : "")).length + 10 && prepareParamBAndSendDataToServer(a), a.b.push(b), (10 <= a.b.length || /t:a/.test(b)) && prepareParamBAndSendDataToServer(a)))
-        }
+    function findAnchorObject(eventElement) {
+        if ("a" == eventElement.tagName.toLowerCase()) return eventElement;
+        for (var tagName = "A"; (eventElement = eventElement.parentNode) && 1 == eventElement.nodeType;)
+            if (eventElement.tagName == tagName)
+                return eventElement;
+        return null;
     }
 
-    //处理参数中B值，并把数据发到服务端，然后清空b值。
-    function prepareParamBAndSendDataToServer(a) {
-        0 != a.b.length && (a.a.et = 2, a.a.ep = "[" + a.b.join(",") + "]", sendDataToServer(a), a.b = [])
+    //需要跟踪转化时，处理F对象中的b值，该值存储的是事件发生的座标及发生的链接地址。如果大于10个元素或者长度大于1024，则发送数据到服务端
+    function documentMouseupEventCallback(_fa) {
+        return function (_event) {
+            var epInfo, ieScrollTop, ieScrollLeft, pointX, pointY;
+            //是IE需要加上滚动高度
+
+            isIE ? (ieScrollTop = Math.max(document.documentElement.scrollTop, document.body.scrollTop),
+                ieScrollLeft = Math.max(document.documentElement.scrollLeft, document.body.scrollLeft),
+                pointX = _event.clientX + ieScrollLeft, pointY = _event.clientY + ieScrollTop)
+                : (pointX = _event.pageX, pointY = _event.pageY);
+
+            var windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.offsetWidth;
+            var windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.offsetHeight;
+
+            epInfo = "{x:" + pointX + ",y:" + pointY + ",s:" + windowWidth + "x" + windowHeight
+                + ",d:" + Math.round(new Date().getTime() / 1E3) + ",";
+
+            var anchor = findAnchorObject(_event.target || _event.srcElement);
+            epInfo = anchor ? epInfo + ("t:a,u:" + encodeURIComponent(anchor.href) + "}")
+                : epInfo + "t:b}";
+
+            //长度大于1024时直接推送b值，然后如果发现大于10个元素，推送到服务端。如果不大于1024，那么如果b中的值处理完后大于1024，则会发到服务端。
+            if ("" != epInfo) {
+                var args = generateValueToServer(_fa).replace(/ep=[^&]*/, "ep=" + encodeURIComponent("[" + epInfo + "]"));
+                var url = httpProtocol + "//localhost:18001/1.gif?" + args;
+                if (1024 < url.length + 10) {
+                    _fa.a.et = 2, _fa.a.ep = "[" + epInfo + "]", sendDataToServer(_fa);
+                    return;
+                }
+                var trackStackParam = encodeURIComponent(_fa.trackStack.join(",") + (_fa.trackStack.length ? "," : ""));
+                (1024 < url.length + trackStackParam.length + 10) && sendDataToServerWhenTrackStackFull(_fa);
+                _fa.trackStack.push(epInfo);
+                (10 <= _fa.trackStack.length || /t:a/.test(epInfo)) && sendDataToServerWhenTrackStackFull(_fa);
+
+            }
+        }
     }
 
     //为window对象增加焦点事件和失去焦点事件，作用就是可以触发切换时间再计算，可以记录用户回来几次和累计的时间
@@ -632,21 +664,23 @@
         this.e = this.m = (new Date).getTime();
         this.i = 0;
         "object" == typeof document.onfocusin
-            ? (addEvent(document, "focusin", calculateOnlineTimeAndRefreshStartTime(this)), addEvent(document, "focusout", calculateOnlineTimeAndRefreshStartTime(this)))
-            : (addEvent(window, "focus", calculateOnlineTimeAndRefreshStartTime(this)), addEvent(window, "blur", calculateOnlineTimeAndRefreshStartTime(this)))
+            ? (addEvent(document, "focusin", calculateOnlineTimeAndRefreshStartTime(this)),
+            addEvent(document, "focusout", calculateOnlineTimeAndRefreshStartTime(this)))
+            : (addEvent(window, "focus", calculateOnlineTimeAndRefreshStartTime(this)),
+            addEvent(window, "blur", calculateOnlineTimeAndRefreshStartTime(this)))
     }
 
     //用户重新进入时刷新开始时间并累积用户在线时间
-    function calculateOnlineTimeAndRefreshStartTime(a) {
+    function calculateOnlineTimeAndRefreshStartTime(_fa) {
         return function (_event) {
             if (!(_event.target && _event.target != window)) {
                 if ("blur" == _event.type || "focusout" == _event.type)
-                    a.i += (new Date).getTime() - a.e;
-                a.e = (new Date).getTime()
+                    _fa.i += (new Date).getTime() - _fa.e;
+                _fa.e = (new Date).getTime()
             }
         }
     }
 
-    new P;
+    new Fa;
 
 })();
