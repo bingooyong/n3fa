@@ -5,7 +5,7 @@ n3fa is a Web Analytics
 
 
 Tools
-=====	
+=====   
 
 * redis的jui操作界面 [redis-commander](https://github.com/nearinfinity/redis-commander)
 
@@ -23,38 +23,38 @@ Tools
 
 
 #数据收集API
-| 参 数 |     途 径    |   名 称    | 备注 |
-| :---  |  :--------:  | :-------   | :--- |
-|  cid  |  javascript  | 访客id     | 由Nginx解析_n3fa_cid中内容，记录日志或传到后端统计服务器 |
-|  si   |  javascript  | 系统id     | 用于区分统计的系统32位token, eg:a9e72dfe4a54a20c3d6e671b3bad01d9|
-|  v    |  javascript  | 版本号     | js的版本号，用于自动更新版本，强制更新缓存（未完成）eg:0.0.1 |
-|  rnd  |  javascript  | 随机数     | 防止请求被缓存，标记每次统计请求唯一 eg:1000677131 |
-|  ds   |  javascript  | 分辨率     | window.screen.height & width eg:1920x1200 |
-|  cl   |  javascript  | 颜色深度   | window.screen.colorDepth eg:24-bit |
-|  ln   |  javascript  | 语 言      | navigator.language eg:zh-CN |
-|  ja   |  javascript  | Java支持   | 0,1 eg:1 |
-|  ck   |  javascript  | Cookie支持 | 0,1 eg:1 |
-|  fl   |  javascript  | Flash版本  | eg:11.9 |
-|  lt   |  javascript  | vv时间     | 在首次请求没有 （上次浏览时间，VV进入时间，半个小时之内都是唯一的） （单位：秒）eg:1327847756|
-|  nv   |  javascript  | 新vv标示   | 是否一次新的VV 默认是 0, st != 4 时 nv = 1 eg:0 |
-|  cc   |  javascript  | VV存储标示 | [0,1] 本地存储_n3fa_lpvt_$si是否成功 |
-|  ct   |  javascript  | 客户端时间 | Math.round(new Date().getTime() / 1E3) (单位:秒) eg:1384930987 |
-|  st   |  javascript  | 来源类型   | [1,2,3,4] 详见ST说明 |
-|  se   |  javascript  | 搜索引擎   | 搜索引擎来源编码，详见源码.  eg: 1 = baidu |
-|  sw   |  javascript  | 搜索子域名 | 详见源码.  eg: news = 新闻 |
-|  see  |  javascript  | 搜索关键字 | eg:中国联通 |
-|  et   |  javascript  | 事件类型   | [0,1,2,3,4] 详见[事件支持](#md-anchor-event) |
-|  ep   |  javascript  | 事件信息   | 详见[事件支持](#md-anchor-event) |
-|  ec   |  nginx       | 请求时间   | ngx.time() eg:1384930987 |
-|  url  |  nginx       | 访问URL    | 请求URL |
+| 参 数|     途 径   |   名 称    | 备注 |
+| :-- | :---------  | :-------   | :--- |
+| cid | javascript  | 访客标示   | 由Nginx解析_n3fa_cid中内容，记录日志或传到后端统计服务器 |
+| si  | javascript  | 系统标示   | 用于区分统计的系统32位token, eg:a9e72dfe4a54a20c3d6e671b3bad01d9|
+| v|  | javascript  | 版本号     | js的版本号，用于自动更新版本，强制更新缓存（未完成）eg:0.0.1 |
+| rnd | javascript  | 随机数     | 防止请求被缓存，标记每次统计请求唯一 eg:1000677131 |
+| ds  | javascript  | 分辨率     | window.screen.height & width eg:1920x1200 |
+| cl  | javascript  | 颜色深度   | window.screen.colorDepth eg:24-bit |
+| ln  | javascript  | 语 言      | navigator.language eg:zh-CN |
+| ja  | javascript  | Java支持   | 0,1 eg:1 |
+| ck  | javascript  | Cookie支持 | 0,1 eg:1 |
+| fl  | javascript  | Flash版本  | eg:11.9 |
+| lt  | javascript  | vv时间     | 在首次请求没有 （上次浏览时间，VV进入时间，半个小时之内都是唯一的） （单位：秒）eg:1327847756|
+| nv  | javascript  | 新VV标示   | 是否一次新的VV 默认是 0, st != 4 时 nv = 1 eg:0 |
+| cc  | javascript  | VV存储标示 | [0,1] 本地存储_n3fa_lpvt_$si是否成功 |
+| ct  | javascript  | 客户端时间 | Math.round(new Date().getTime() / 1E3) (单位:秒) eg:1384930987 |
+| st  | javascript  | 来源类型   | [1,2,3,4] 详见ST说明 |
+| se  | javascript  | 搜索引擎   | 搜索引擎来源编码，详见源码.  eg: 1 = baidu |
+| sw  | javascript  | 搜索子域名 | 详见源码.  eg: news = 新闻 |
+| see | javascript  | 搜索关键字 | eg:中国联通 |
+| et  | javascript  | 事件类型   | [0,1,2,3,4] 详见[事件支持](#事件支持) |
+| ep  | javascript  | 事件信息   | 详见[事件支持](#事件支持) |
+| ec  | nginx       | 请求时间   | ngx.time() eg:1384930987 |
+| url | nginx       | 访问url   | 请求URL
 
 #Cookie信息
 
 | CookieName       |  名 称             | 备注 |
 | :---             |  :--------         | :--- |
 |  _n3fa_cid       |  客户标示          | eg:863515009a92416db45f0644c910ad15 |
-|  _n3fa_lpvt_\$si |  PV访问时间        | eg:1377159824 |
-|  _n3fa_lvt_\$si  |  访客访问时间轨迹  | 标记用户30天内的进入时间（超过30分钟新增一个）eg:[1377159824,1377163563,1377167168] |
+|  _n3fa_lpvt_$si  |  PV访问时间        | eg:1377159824 |
+|  _n3fa_lvt_$si   |  访客访问时间轨迹  | 标记用户30天内的进入时间（超过30分钟新增一个）eg:[1377159824,1377163563,1377167168] |
 
 #JS-API
 
@@ -93,7 +93,7 @@ Tools
 3. opt_label：事件的一些额外信息，通常可以是歌曲的名称、软件的名称、链接的名称等等。该项可选。
 4. opt_value：事件的一些数值信息，比如权重、时长、价格等等，在报表中可以看到其平均值等数据。该项可选。
 
-#事件支持 {#md-anchor-event}   
+#事件支持 
 
 * 页面加载事件
 
@@ -122,18 +122,11 @@ Tools
 
 URL匹配规则 格式 HMSET n3fa:url_configs url_regex javascript_key
 
-	HMSET n3fa:url_configs http://ly.10010.com:19001/SearchApp/chseSearchList/init*  28673FF3-0ABF-353B-A35F-759DAFD20073
+    HMSET n3fa:url_configs http://ly.10010.com:19001/SearchApp/chseSearchList/init*  28673FF3-0ABF-353B-A35F-759DAFD20073
 
 自定义js代码 格式 HMSET n3fa:javascripts javascript_key javascript_value
 
-	HMSET n3fa:javascripts 28673FF3-0ABF-353B-A35F-759DAFD20073 "$(function(){ _n3fa.push(['_trackEvent', 'search', 'result',$('.searchResultInfor .cBlue').text(),$('.searchResultInfor .cOrange').text()]);})"
-	
-	
-in nginx web proxy server config add sub_filter to load ga.js such as mall.conf
-
-    sub_filter "</head>" "<script language='javascript'>var _n3fa = _n3fa || []; (function () {    var fa = document.createElement('script');    fa.type = 'text/javascript';    fa.async = true;    fa.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://') + 'ly.10010.com:18001/Study/ga/fa.js';    var s = document.getElementsByTagName('script')[0];    s.parentNode.insertBefore(fa, s); })();</script></head>";
-
-    sub_filter_once on;
+    HMSET n3fa:javascripts 28673FF3-0ABF-353B-A35F-759DAFD20073 "$(function(){ _n3fa.push(['_trackEvent', 'search', 'result',$('.searchResultInfor .cBlue').text(),$('.searchResultInfor .cOrange').text()]);})"
     
 
 in nginx resources server config add lua redis such as local.conf lua_fa.lua
