@@ -6,8 +6,10 @@
         version: "0.0.1",
         elementEventMonitor: [],
         isClickPointMonitor: true,
+        isAjaxEventMonitor: true,
         interval2NewVisit: 1800, // 30分钟
         interval2expire: 31536000000,
+        receiveUrl: "//eop.mall.10010.com/_n3fa_img.gif?",
         searchEngine: [
             [1, 'baidu.com', 'word|wd|w', 1, 'news,tieba,zhidao,,image,video,hi,baike,wenku,opendata,jingyan'],
             [2, 'google.com', 'q', 0, 'tbm=isch,tbm=vid,tbm=nws|source=newssearch,tbm=blg,tbm=frm'],
@@ -31,16 +33,27 @@
     };
 
     var isIE = /msie (\d+\.\d+)/i.test(navigator.userAgent),  // ea是否是IE
-        isCookieEnabled = navigator.cookieEnabled,//ck:是否支持cookie 1:0
-        isJavaEnabled = navigator.javaEnabled(),//ja:java支持 1:0
+        isCookieEnabled = navigator.cookieEnabled,// ck:是否支持cookie 1:0
+        isJavaEnabled = navigator.javaEnabled(),// ja:java支持 1:0
         localLanguage = navigator.language || navigator.browserLanguage
-            || navigator.systemLanguage || navigator.userLanguage || "",//ln:语言 zh-cn
-        screenWidthAndHeight = window.screen.width + "x" + window.screen.height,//ds:屏幕尺寸
-        screenColorDepth = window.screen.colorDepth,//cl:颜色深度
+            || navigator.systemLanguage || navigator.userLanguage || "",// ln:语言 zh-cn
+        screenWidthAndHeight = window.screen.width + "x" + window.screen.height,// ds:屏幕尺寸
+        screenColorDepth = window.screen.colorDepth,// cl:颜色深度
         pageViewTime = 0,
         entryTime = Math.round(+new Date / 1E3),
         httpProtocol = "https:" == document.location.protocol ? "https:" : "http:",
-        sendToServerParamNames = "cc ck cl ds ep et ec fl ja ln lo lt nv rnd sb se si st su sw sse v cv lv u tt".split(" ");
+        sendToServerParamNames = "cc ck cl ct ds ep et fl ja ln lo lt nv rnd sb se si st su sw sse v cv lv url tt".split(" ");
+
+
+    function uuid() {
+        var d = new Date().getTime();
+        var uuid = 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = (d + Math.random() * 16) % 16 | 0;
+            d = Math.floor(d / 16);
+            return (c == 'x' ? r : (r & 0x7 | 0x8)).toString(16);
+        });
+        return uuid;
+    };
 
     function getParameterFromUrl(url, parameter) {
         var matchResult = url.match(new RegExp("(^|&|\\?|#)(" + parameter + ")=([^&#]*)(&|$|#)", ""));
@@ -203,7 +216,7 @@
 
     //--在指定URL中增加U值，把最新的值插入到_n3fa_unsent_中存储值前面并保存
     function prepareParamUValueAndSave(_fa, postUrl) {
-        var href = _fa.a.u ? "" : "&u=" + encodeURIComponent(document.location.href);
+        var href = _fa.a.url ? "" : "&url=" + encodeURIComponent(document.location.href);
         var unsentData = getSessionStorage("_n3fa_unsent_" + _config.id) || "";
         unsentData = encodeURIComponent(postUrl.replace(/^https?:\/\//, "") + href) + (unsentData ? "," + unsentData : "");
         //关闭前可能这些数据发不了，这样留在用户下次登陆相关页面时发送。
@@ -211,16 +224,16 @@
     }
 
     function sendDataToServer(_fa) {
-        _fa.a.ec = Math.round(new Date().getTime() / 1E3);
+        _fa.a.ct = Math.round(new Date().getTime() / 1E3);
         _fa.a.rnd = Math.round(2147483647 * Math.random());
-        var postUrl = httpProtocol + "//localhost:18001/1.gif?" + generateValueToServer(_fa);
+        var postUrl = httpProtocol + _config.receiveUrl + generateValueToServer(_fa);
         prepareParamUValueAndSave(_fa, postUrl);
         postDataToServer(postUrl, function (url) {
             removeOldValueAndSaveNewValue(url)
         })
     }
 
-    function sendDataToServerWhenBeforeUnload(_fa) {
+    function sendDataToServerOnBeforeUnload(_fa) {
         return function () {
             _fa.a.nv = 0;
             _fa.a.st = 4;
@@ -230,7 +243,7 @@
         }
     }
 
-    function sendDataToServerWhenTrackStackFull(_fa) {
+    function sendDataToServerOnTrackStackFull(_fa) {
         if (0 != _fa.trackStack.length)
             _fa.a.et = 2, _fa.a.ep = "[" + _fa.trackStack.join(",") + "]", sendDataToServer(_fa), _fa.trackStack = []
     }
@@ -326,26 +339,26 @@
      * 3=从其它模块过来,但不是指定域名
      * 4=域名进入且刷新页面时不超过半小时
      *
-     * @param a
+     * @param _fa
      * @param lastVisitTime
      * @returns {number}
      */
-    function pageEnterType(a, lastVisitTime) {
+    function pageEnterType(_fa, lastVisitTime) {
         if (!document.referrer) {
             return entryTime - lastVisitTime > _config.interval2NewVisit ? 1 : 4;
         }
 
-        for (var p = 0, za = _config.searchEngine.length; p < za; p++) {
-            var referrerRegExp = new RegExp("(^|\\.)" + _config.searchEngine[p][1].replace(/\./g, "\\."));
+        for (var i = 0, length = _config.searchEngine.length; i < length; i++) {
+            var referrerRegExp = new RegExp("(^|\\.)" + _config.searchEngine[i][1].replace(/\./g, "\\."));
             if (referrerRegExp.test(deleteHttpAndPortForURL(document.referrer))) {
-                var keywords = getParameterFromUrl(document.referrer, _config.searchEngine[p][2]) || "";
-                var searchEngineId = _config.searchEngine[p][0];
+                var keywords = getParameterFromUrl(document.referrer, _config.searchEngine[i][2]) || "";
+                var searchEngineId = _config.searchEngine[i][0];
                 if (notEmptyKeyWordsOrNotSpecifySearchEngine(keywords, searchEngineId)) {
                     //cpro.baidu.com是百度网盟的来源，如果是网盟则keywords为空
                     1 == searchEngineId && -1 < document.referrer.indexOf("cpro.baidu.com") && (keywords = "");
-                    a.a.se = searchEngineId;//搜索引擎ID
-                    a.a.sse = findSearchEngineChannel(p); //搜索引擎的频道
-                    a.a.sw = keywords;//搜索关键字
+                    _fa.a.se = searchEngineId; // 搜索引擎ID
+                    _fa.a.sse = findSearchEngineChannel(i); // 搜索引擎的频道
+                    _fa.a.sw = keywords; // 搜索关键字
                     return 2;
                 }
             }
@@ -395,13 +408,24 @@
         }
     }
 
-    function sendDataToServerWhenPageView(_fa) {
+    function sendDataToServerOnPageView(_fa) {
         _fa.a.et = 0, _fa.a.ep = "", sendDataToServer(_fa)
+    }
+
+    function ajaxEventMonitor(_fa) {
+        $(function () {
+            $(document).bind("ajaxComplete", function (event, jqxhr, settings) {
+                var _url = httpProtocol + "//" + document.location.host;
+                var _trackPageviewUrl = settings.url.indexOf("http") === 0 ? settings.url :
+                    settings.url.indexOf("/") === 0 ? _url + settings.url : _url + "/" + settings.url;
+                _n3fa.push(["_trackPageview", _trackPageviewUrl]);
+            });
+        })
     }
 
     function start(_fa) {
         try {
-            var isNewVisit, enterType, isSavedEntryTime, lastVisitTime, m, visitTimesStored, visitTimesArray;
+            var isNewVisit, enterType, isSavedEntryTime, lastVisitTime, m, visitTimesStored, visitTimesArray, n3faCid;
             pageViewTime = getData("_n3fa_lpvt_" + _config.id) || 0;
             13 == pageViewTime.length && (pageViewTime = Math.round(pageViewTime / 1E3));
 
@@ -425,6 +449,9 @@
                 visitTimesStored = entryTime, lastVisitTime = "", m = 1;
             }
 
+            n3faCid = getData("_n3fa_cid") || uuid();
+
+            setData("_n3fa_cid", n3faCid, _config.interval2expire);
             setData("_n3fa_lvt_" + _config.id, visitTimesStored, _config.interval2expire);   // localstorage中存储
             setData("_n3fa_lpvt_" + _config.id, entryTime); // sessionstorage中存
             isSavedEntryTime = entryTime == getData("_n3fa_lpvt_" + _config.id) ? "1" : "0"; // EntryTime是否存储成功
@@ -455,7 +482,7 @@
             _fa.addMouseupAndBeforeUnloadEventForDocument && _fa.addMouseupAndBeforeUnloadEventForDocument();
             _fa.f = new AddFocusAndBlurEventForWindow;
 
-            addEvent(window, "beforeunload", sendDataToServerWhenBeforeUnload(_fa)); // 页面离开事件
+            addEvent(window, "beforeunload", sendDataToServerOnBeforeUnload(_fa)); // 页面离开事件
             loadN3faConfig(); // 处理存储在window._n3fa中的值
 
 
@@ -469,7 +496,9 @@
 
             //未定义时则提交数据到服务端，或者_n3fa_autoPageview = true时，则提交数据到服务端
             if ("undefined" === typeof window._n3fa_autoPageview || window._n3fa_autoPageview === true)
-                sendDataToServerWhenPageView(_fa);
+                sendDataToServerOnPageView(_fa);
+
+            if (_config.isAjaxEventMonitor && window.jQuery) ajaxEventMonitor(_fa);
 
         } catch (exception) {
             _fa = [],
@@ -477,7 +506,7 @@
                 _fa.push("n=" + encodeURIComponent(exception.name)),
                 _fa.push("m=" + encodeURIComponent(exception.message)),
                 _fa.push("r=" + encodeURIComponent(document.referrer)),
-                postDataToServer(httpProtocol + "//localhost:18001/1.gif?" + _fa.join("&"))
+                postDataToServer(httpProtocol + _config.receiveUrl + _fa.join("&"))
         }
     }
 
@@ -498,13 +527,13 @@
     }
 
     //处理对象数组，首先参数是对象数组，然后根据第一个参数决定如何处理参数值
-    Fa.prototype.prepareObjectArray = function (a) {
+    Fa.prototype.prepareObjectArray = function (configApi) {
 
-        var func = function (a) {
-            if ("[object Array]" !== Object.prototype.toString.call(a))
+        var isCorrectType = function (obj) {
+            if ("[object Array]" !== Object.prototype.toString.call(obj))
                 return false;
-            for (var b = a.length - 1; 0 <= b; b--) {
-                var d = a[b];
+            for (var b = obj.length - 1; 0 <= b; b--) {
+                var d = obj[b];
                 if (("[object Number]" !== {}.toString.call(d) || !isFinite(d))
                     && "[object String]" !== {}.toString.call(d) && d !== true && d !== false)
                     return false
@@ -512,47 +541,55 @@
             return true
         };
 
-        if (func(a)) {
+        if (!isCorrectType(configApi)) {
+            return;
+        }
 
-            var escapeSpecialChar = function (str) {
-                return str.replace ? str.replace(/'/g, "'0").replace(/\*/g, "'1").replace(/!/g, "'2") : str
-            };
+        var escapeSpecialChar = function (str) {
+            return str.replace ? str.replace(/'/g, "'0").replace(/\*/g, "'1").replace(/!/g, "'2") : str
+        };
 
-            switch (a[0]) {
-                // 支持_n3fa.push(['_trackPageview', pageURL]);  http://tongji.baidu.com/open/api/more?p=ref_trackPageview
-                case "_trackPageview":
-                    if (1 < a.length && a[1].charAt && "/" == a[1].charAt(0)) {
-                        this.a.et = 0;
-                        this.a.ep = "";
-                        this.h ? (this.a.nv = 0, this.a.st = 4) : this.h = true;
-                        var b = this.a.u, d = this.a.su;
-                        this.a.u = httpProtocol + "//" + document.location.host + a[1];
-                        this.a.su = document.location.href;
-                        sendDataToServer(this);
-                        this.a.u = b;
-                        this.a.su = d
-                    }
-                    break;
-
-                // http://tongji.baidu.com/open/api/more?p=ref_trackEvent
-                case "_trackEvent":
-                    2 < a.length && (this.a.nv = 0, this.a.st = 4, this.a.et = 4, this.a.ep = (a[1]) + "*" +
-                        escapeSpecialChar(a[2]) + (a[3] ? "*" + escapeSpecialChar(a[3]) : "")
-                        + (a[4] ? "*" + escapeSpecialChar(a[4]) : ""), sendDataToServer(this));
-                    break;
-                case "_setCustomVar":
-                    if (4 > a.length)break;
-                    var d = a[1], e = a[4] || 3;
-                    if (0 < d && 6 > d && 0 < e && 4 > e) {
-                        this.d++;
-                        for (var f = (this.a.cv || "*").split("!"), m = f.length; m < d - 1; m++)f.push("*");
-                        f[d - 1] = e + "*" + escapeSpecialChar(a[2]) + "*" + escapeSpecialChar(a[3]);
-                        this.a.cv = f.join("!");
-                        a = this.a.cv.replace(/[^1](\*[^!]*){2}/g, "*").replace(/((^|!)\*)+$/g, "");
-                        "" !== a ? this.setData("_n3fa_cv_" + _config.id, encodeURIComponent(a), _config.interval2expire)
-                            : removeCookieAndLocalValue()
-                    }
-            }
+        switch (configApi[0]) {
+            case "_setReceiveUrl":
+                if (1 < configApi.length) {
+                    _config.receiveUrl = configApi[1];
+                }
+                break;
+            case "_setId":
+                if (1 < configApi.length && /^[0-9a-z]{32}$/.test(configApi[1])) {
+                    this.a.si = configApi[1];
+                }
+                break;
+            case "_trackPageview":
+                if (1 < configApi.length && configApi[1].charAt) {
+                    this.a.et = 0;
+                    this.a.ep = "";
+                    this.h ? (this.a.nv = 0, this.a.st = 4) : this.h = true;
+                    var b = this.a.url, d = this.a.su;
+                    this.a.url = configApi[1];
+                    this.a.su = document.location.href;
+                    sendDataToServer(this);
+                    this.a.url = b;
+                    this.a.su = d
+                }
+                break;
+            case "_trackEvent":
+                2 < configApi.length && (this.a.nv = 0, this.a.st = 4, this.a.et = 4, this.a.ep = (configApi[1]) + "*" +
+                    escapeSpecialChar(configApi[2]) + (configApi[3] ? "*" + escapeSpecialChar(configApi[3]) : "")
+                    + (configApi[4] ? "*" + escapeSpecialChar(configApi[4]) : ""), sendDataToServer(this));
+                break;
+            case "_setCustomVar":
+                if (4 > configApi.length) break;
+                var index = configApi[1], optScope = configApi[4] || 3;
+                if (0 < index && 6 > index && 0 < optScope && 4 > optScope) {
+                    this.d++;
+                    for (var f = (this.a.cv || "*").split("!"), m = f.length; m < index - 1; m++) f.push("*");
+                    f[index - 1] = optScope + "*" + escapeSpecialChar(configApi[2]) + "*" + escapeSpecialChar(configApi[3]);
+                    this.a.cv = f.join("!");
+                    var customVar = this.a.cv.replace(/[^1](\*[^!]*){2}/g, "*").replace(/((^|!)\*)+$/g, "");
+                    "" !== configApi ? setData("_n3fa_cv_" + _config.id, encodeURIComponent(customVar), _config.interval2expire)
+                        : removeCookieAndLocalValue()
+                }
         }
     };
 
@@ -606,10 +643,10 @@
         if (!_config.isClickPointMonitor) return;
         addEvent(document, "mouseup", documentMouseupEventCallback(this));
         addEvent(window, "beforeunload", function () {
-            sendDataToServerWhenTrackStackFull(_fa)
+            sendDataToServerOnTrackStackFull(_fa)
         });
         setInterval(function () {
-            sendDataToServerWhenTrackStackFull(_fa)
+            sendDataToServerOnTrackStackFull(_fa)
         }, 6E5);//600000,10分钟
     };
 
@@ -645,15 +682,15 @@
             //长度大于1024时直接推送b值，然后如果发现大于10个元素，推送到服务端。如果不大于1024，那么如果b中的值处理完后大于1024，则会发到服务端。
             if ("" != epInfo) {
                 var args = generateValueToServer(_fa).replace(/ep=[^&]*/, "ep=" + encodeURIComponent("[" + epInfo + "]"));
-                var url = httpProtocol + "//localhost:18001/1.gif?" + args;
+                var url = httpProtocol + _config.receiveUrl + args;
                 if (1024 < url.length + 10) {
                     _fa.a.et = 2, _fa.a.ep = "[" + epInfo + "]", sendDataToServer(_fa);
                     return;
                 }
                 var trackStackParam = encodeURIComponent(_fa.trackStack.join(",") + (_fa.trackStack.length ? "," : ""));
-                (1024 < url.length + trackStackParam.length + 10) && sendDataToServerWhenTrackStackFull(_fa);
+                (1024 < url.length + trackStackParam.length + 10) && sendDataToServerOnTrackStackFull(_fa);
                 _fa.trackStack.push(epInfo);
-                (10 <= _fa.trackStack.length || /t:a/.test(epInfo)) && sendDataToServerWhenTrackStackFull(_fa);
+                (10 <= _fa.trackStack.length || /t:a/.test(epInfo)) && sendDataToServerOnTrackStackFull(_fa);
 
             }
         }
