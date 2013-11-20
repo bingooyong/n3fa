@@ -27,13 +27,13 @@ Tools
 | :-- | :---------  | :-------   | :--- |
 | cid | javascript  | 访客标示   | 由Nginx解析_n3fa_cid中内容，记录日志或传到后端统计服务器 |
 | si  | javascript  | 系统标示   | 用于区分统计的系统32位token, eg:a9e72dfe4a54a20c3d6e671b3bad01d9|
-| v|  | javascript  | 版本号     | js的版本号，用于自动更新版本，强制更新缓存（未完成）eg:0.0.1 |
+| v   | javascript  | 版本号     | js的版本号，用于自动更新版本，强制更新缓存（未完成）eg:0.0.1 |
 | rnd | javascript  | 随机数     | 防止请求被缓存，标记每次统计请求唯一 eg:1000677131 |
 | ds  | javascript  | 分辨率     | window.screen.height & width eg:1920x1200 |
 | cl  | javascript  | 颜色深度   | window.screen.colorDepth eg:24-bit |
 | ln  | javascript  | 语 言      | navigator.language eg:zh-CN |
-| ja  | javascript  | Java支持   | 0,1 eg:1 |
-| ck  | javascript  | Cookie支持 | 0,1 eg:1 |
+| ja  | javascript  | Java支持   | [0,1] eg:1 |
+| ck  | javascript  | Cookie支持 | [0,1] eg:1 |
 | fl  | javascript  | Flash版本  | eg:11.9 |
 | lt  | javascript  | vv时间     | 在首次请求没有 （上次浏览时间，VV进入时间，半个小时之内都是唯一的） （单位：秒）eg:1327847756|
 | nv  | javascript  | 新VV标示   | 是否一次新的VV 默认是 0, st != 4 时 nv = 1 eg:0 |
