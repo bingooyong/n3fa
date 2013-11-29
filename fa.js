@@ -562,7 +562,7 @@
                 break;
             case "_trackPageview":
                 if (1 < configApi.length && configApi[1].charAt) {
-                    this.a.et = 0;
+                    this.a.et = 5;
                     this.a.ep = "";
                     this.h ? (this.a.nv = 0, this.a.st = 4) : this.h = true;
                     var b = this.a.url, d = this.a.su;

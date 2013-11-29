@@ -116,6 +116,10 @@ Tools
 
         et = 4，ep =  music*play*Hey Jude，由扩展API _n3fa.push(['_trackEvent', 'music', 'play', 'Hey Jude']) 触发
 
+* PV事件
+
+        et = 5  // 由扩展API _n3fa.push(['_trackPageview', 'url']) 触发
+
 
 #动态嵌入统计代码
 将RequestUrl和自定义javascript配置放在redis中
