@@ -47,6 +47,8 @@ Tools
 | ep  | javascript  | 事件信息   | 详见[事件支持](#事件支持) |
 | ec  | nginx       | 请求时间   | ngx.time() eg:1384930987 |
 | url | nginx       | 访问url   | 请求URL
+| n   | javascript  | 异常名称   | exception.name 异常名称
+| m   | javascript  | 异常信息   | exception.message 异常信息
 
 #Cookie信息
 
