@@ -120,7 +120,7 @@ Tools
 
 * PV事件
 
-        et = 5  // 由扩展API _n3fa.push(['_trackPageview', 'url']) 触发
+        et = 0  // 由扩展API _n3fa.push(['_trackPageview', 'url']) 触发
 
 
 #动态嵌入统计代码
