@@ -54,9 +54,11 @@ Tools
 
 | CookieName       |  名 称             | 备注 |
 | :---             |  :--------         | :--- |
-|  \_n3fa\_cid       |  客户标示          | eg:863515009a92416db45f0644c910ad15 |
+|  \_n3fa\_cid     |  客户标示          | eg:863515009a92416db45f0644c910ad15 |
+|  \_n3fa\_ext     |  扩展信息          | 用于存储统计的扩展信息，格式: name=value^name1=value1, 参数详见[扩展信息]|
 |  \_n3fa\_lpvt\_$si  |  PV访问时间        | eg:1377159824 |
 |  \_n3fa\_lvt\_$si   |  访客访问时间轨迹  | 标记用户30天内的进入时间（超过30分钟新增一个）eg:[1377159824,1377163563,1377167168] |
+
 
 #JS-API
 
@@ -122,6 +124,14 @@ Tools
 
         et = 0  // 由扩展API _n3fa.push(['_trackPageview', 'url']) 触发
 
+
+#扩展信息
+
+扩展信息使用 name=value^name1=value1^name2=value2的形式存储在名为\_n3fa\_ext的cookie中
+    
+| Name   |  Value         | 备注 |
+| :---   |  :--------         | :--- |
+| ft     |  第一次访问时间         | eg:1383722924 单位：秒，新访客第一次访问时间 |
 
 #动态嵌入统计代码
 将RequestUrl和自定义javascript配置放在redis中

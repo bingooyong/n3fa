@@ -6,7 +6,7 @@
         version: "0.0.1",
         elementEventMonitor: [],
         isClickPointMonitor: true,
-        isAjaxEventMonitor: true,
+        isAjaxEventMonitor: false,
         interval2NewVisit: 1800, // 30分钟
         interval2expire: 31536000000,
         receiveUrl: "//eop.mall.10010.com/_n3fa_img.gif?",
@@ -42,6 +42,7 @@
         pageViewTime = 0,
         entryTime = Math.round(+new Date / 1E3),
         httpProtocol = "https:" == document.location.protocol ? "https:" : "http:",
+        extToServerParamNames = "ft".split(" "),
         sendToServerParamNames = "cc ck cl ct ds ep et fl ja ln lo lt nv rnd sb se si st su sw sse v cv lv url tt".split(" ");
 
 
@@ -159,26 +160,33 @@
     }
 
     function generateValueToServer(_fa) {
-        for (var valuesToSend = [], i = 0, length = sendToServerParamNames.length; i < length; i++) {
-            var parameter = sendToServerParamNames[i], parameterValue = _fa.a[parameter];
-            "undefined" != typeof parameterValue && "" !== parameterValue
-            && valuesToSend.push(parameter + "=" + encodeURIComponent(parameterValue))
+        return generateStringWithObjProperty(_fa.a, sendToServerParamNames, "&");
+    }
+
+    function generateStringWithObjProperty(obj, propertys, join) {
+        for (var valuesToSend = [], i = 0, length = propertys.length; i < length; i++) {
+            var propertyName = propertys[i], propertyValue = obj[propertyName];
+            "undefined" != typeof propertyValue && "" !== propertyValue
+            && valuesToSend.push(propertyName + "=" + encodeURIComponent(propertyValue))
         }
-        return valuesToSend.join("&")
+        return valuesToSend.join(join)
     }
 
     //提交浏览器中存储数据到服务端 a.nv=0时执行，刷新时没有大于半小时
     function postSessionStorageDataToServer() {
         var unsentData = getSessionStorage("_n3fa_unsent_" + _config.id);
-        if (unsentData) {
+        if (!unsentData) {
+            return;
+        }
+        try {
             for (var a = unsentData.split(","), b = 0, d = a.length; b < d; b++) {
                 var _url = httpProtocol + "//" + decodeURIComponent(a[b]).replace(/^https?:\/\//, "");
                 postDataToServer(_url, function (a) {
                     removeOldValueAndSaveNewValue(a)
                 })
             }
+        } catch (exception) {
         }
-
     }
 
     function postDataToServer(url, callback) {
@@ -423,9 +431,20 @@
         })
     }
 
+    function nowTimeOnSecond() {
+        return Math.round(new Date().getTime() / 1E3);
+    }
+
+    function buildExt() {
+        var _ext = {};
+        _ext.ft = nowTimeOnSecond();
+        return generateStringWithObjProperty(_ext, extToServerParamNames, "^");
+    }
+
     function start(_fa) {
         try {
-            var isNewVisit, enterType, isSavedEntryTime, lastVisitTime, m, visitTimesStored, visitTimesArray, n3faCid;
+            var isNewVisit, enterType, isSavedEntryTime, lastVisitTime, m, visitTimesStored, visitTimesArray, n3faCid,
+                n3faExt;
             pageViewTime = getData("_n3fa_lpvt_" + _config.id) || 0;
             13 == pageViewTime.length && (pageViewTime = Math.round(pageViewTime / 1E3));
 
@@ -450,8 +469,10 @@
             }
 
             n3faCid = getData("_n3fa_cid") || uuid();
+            n3faExt = getData("_n3fa_ext") || buildExt();
 
             setData("_n3fa_cid", n3faCid, _config.interval2expire);
+            setData("_n3fa_ext", n3faExt, _config.interval2expire);
             setData("_n3fa_lvt_" + _config.id, visitTimesStored, _config.interval2expire);   // localstorage中存储
             setData("_n3fa_lpvt_" + _config.id, entryTime); // sessionstorage中存
             isSavedEntryTime = entryTime == getData("_n3fa_lpvt_" + _config.id) ? "1" : "0"; // EntryTime是否存储成功
@@ -562,11 +583,11 @@
                 break;
             case "_trackPageview":
                 if (1 < configApi.length && configApi[1].charAt) {
-                    this.a.et = 5;
+                    this.a.et = 0;
                     this.a.ep = "";
                     this.h ? (this.a.nv = 0, this.a.st = 4) : this.h = true;
                     var b = this.a.url, d = this.a.su;
-                    this.a.url = configApi[1];
+                    this.a.url = encodeURIComponent(configApi[1]);
                     this.a.su = document.location.href;
                     sendDataToServer(this);
                     this.a.url = b;
