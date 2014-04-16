@@ -9,7 +9,7 @@
         isAjaxEventMonitor: false,
         interval2NewVisit: 1800, // 30分钟
         interval2expire: 31536000000,
-        receiveUrl: "//eop.mall.10010.com/_n3fa_img.gif?",
+        receiveUrl: "https:" == document.location.protocol ? "//uac.10010.com/_n3fa_img.gif?" : "//eop.mall.10010.com/_n3fa_img.gif?",
         searchEngine: [
             [1, 'baidu.com', 'word|wd|w', 1, 'news,tieba,zhidao,,image,video,hi,baike,wenku,opendata,jingyan'],
             [2, 'google.com', 'q', 0, 'tbm=isch,tbm=vid,tbm=nws|source=newssearch,tbm=blg,tbm=frm'],
@@ -43,7 +43,7 @@
         entryTime = Math.round(+new Date / 1E3),
         httpProtocol = "https:" == document.location.protocol ? "https:" : "http:",
         extToServerParamNames = "ft".split(" "),
-        sendToServerParamNames = "cc ck cl ct ds ep et fl ja ln lo lt nv rnd sb se si st su sw sse v cv lv url tt".split(" ");
+        sendToServerParamNames = "cc ck cl ct ds ep et fl ja ln lo lt nv rnd sb se si st su sw sse v cv lv url tt ab".split(" ");
 
 
     function uuid() {
@@ -232,7 +232,7 @@
     }
 
     function sendDataToServer(_fa) {
-        _fa.a.ct = Math.round(new Date().getTime() / 1E3);
+        _fa.a.ct = new Date().getTime();
         _fa.a.rnd = Math.round(2147483647 * Math.random());
         var postUrl = httpProtocol + _config.receiveUrl + generateValueToServer(_fa);
         prepareParamUValueAndSave(_fa, postUrl);
@@ -492,6 +492,9 @@
             _fa.a.fl = flashVersion();               // flash版本
             _fa.a.v = _config.version;               // 版本号
             _fa.a.cv = decodeURIComponent(getData("_n3fa_cv_" + _config.id) || ""); // _setCustomVar 的值
+            _fa.a.ab = decodeURIComponent(getData("n3ABresult") || ""); // n3ABresult 的值
+
+
             1 == _fa.a.nv && (_fa.a.tt = document.title || ""); // 页面的title 只有是新的VV时才统计
 
             //进入类型不一样，调用方法不一样。第一次输入域名进入为1,第二次未超过半小时nv=0

@@ -38,7 +38,7 @@ Tools
 | lt  | javascript  | vv时间     | 在首次请求没有 （上次浏览时间，VV进入时间，半个小时之内都是唯一的） （单位：秒）eg:1327847756|
 | nv  | javascript  | 新VV标示   | 是否一次新的VV 默认是 0, st != 4 时 nv = 1 eg:0 |
 | cc  | javascript  | VV存储标示 | [0,1] 本地存储_n3fa_lpvt_$si是否成功 |
-| ct  | javascript  | 客户端时间 | Math.round(new Date().getTime() / 1E3) (单位:秒) eg:1384930987 |
+| ct  | javascript  | 客户端时间 |  new Date().getTime() (单位:毫秒) eg:1397610481146 |
 | st  | javascript  | 来源类型   | [1,2,3,4] 详见ST说明 |
 | se  | javascript  | 搜索引擎   | 搜索引擎来源编码，详见源码.  eg: 1 = baidu |
 | sw  | javascript  | 搜索子域名 | 详见源码.  eg: news = 新闻 |
