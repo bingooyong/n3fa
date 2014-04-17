@@ -32,20 +32,6 @@
         ]
     };
 
-    var isIE = /msie (\d+\.\d+)/i.test(navigator.userAgent),  // ea是否是IE
-        isCookieEnabled = navigator.cookieEnabled,// ck:是否支持cookie 1:0
-        isJavaEnabled = navigator.javaEnabled(),// ja:java支持 1:0
-        localLanguage = navigator.language || navigator.browserLanguage
-            || navigator.systemLanguage || navigator.userLanguage || "",// ln:语言 zh-cn
-        screenWidthAndHeight = window.screen.width + "x" + window.screen.height,// ds:屏幕尺寸
-        screenColorDepth = window.screen.colorDepth,// cl:颜色深度
-        pageViewTime = 0,
-        entryTime = Math.round(+new Date / 1E3),
-        httpProtocol = "https:" == document.location.protocol ? "https:" : "http:",
-        extToServerParamNames = "ft".split(" "),
-        sendToServerParamNames = "cc ck cl ct ds ep et fl ja ln lo lt nv rnd sb se si st su sw sse v cv lv url tt ab".split(" ");
-
-
     function uuid() {
         var d = new Date().getTime();
         var uuid = 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -55,6 +41,29 @@
         });
         return uuid;
     };
+
+    var uuidByPattern = function (pattern) {
+        pattern = pattern || 'xxxxyxxx';
+        return pattern.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    };
+
+
+    var isIE = /msie (\d+\.\d+)/i.test(navigator.userAgent),  // ea是否是IE
+        isCookieEnabled = navigator.cookieEnabled,// ck:是否支持cookie 1:0
+        isJavaEnabled = navigator.javaEnabled(),// ja:java支持 1:0
+        localLanguage = navigator.language || navigator.browserLanguage
+            || navigator.systemLanguage || navigator.userLanguage || "",// ln:语言 zh-cn
+        screenWidthAndHeight = window.screen.width + "x" + window.screen.height,// ds:屏幕尺寸
+        screenColorDepth = window.screen.colorDepth,// cl:颜色深度
+        pageViewTime = 0,
+        pageViewNumber = new Date().getTime() + uuidByPattern(),
+        entryTime = Math.round(+new Date / 1E3),
+        httpProtocol = "https:" == document.location.protocol ? "https:" : "http:",
+        extToServerParamNames = "ft".split(" "),
+        sendToServerParamNames = "cc ck cl ct ds ep et fl ja ln lo lt nv rnd sb se si st su sw sse v cv lv url tt ab pn".split(" ");
 
     function getParameterFromUrl(url, parameter) {
         var matchResult = url.match(new RegExp("(^|&|\\?|#)(" + parameter + ")=([^&#]*)(&|$|#)", ""));
@@ -493,6 +502,7 @@
             _fa.a.v = _config.version;               // 版本号
             _fa.a.cv = decodeURIComponent(getData("_n3fa_cv_" + _config.id) || ""); // _setCustomVar 的值
             _fa.a.ab = decodeURIComponent(getData("n3ABresult") || ""); // n3ABresult 的值
+            _fa.a.pn = pageViewNumber;               // 页面编码
 
 
             1 == _fa.a.nv && (_fa.a.tt = document.title || ""); // 页面的title 只有是新的VV时才统计

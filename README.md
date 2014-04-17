@@ -29,6 +29,7 @@ Tools
 | si  | javascript  | 系统标示   | 用于区分统计的系统32位token, eg:a9e72dfe4a54a20c3d6e671b3bad01d9|
 | v   | javascript  | 版本号     | js的版本号，用于自动更新版本，强制更新缓存（未完成）eg:0.0.1 |
 | rnd | javascript  | 随机数     | 防止请求被缓存，标记每次统计请求唯一 eg:1000677131 |
+| pn  | javascript  | 页面编码    | 页面加载时生成，唯一页面标示 eg:13977251372324b50aebf |
 | ds  | javascript  | 分辨率     | window.screen.height & width eg:1920x1200 |
 | cl  | javascript  | 颜色深度   | window.screen.colorDepth eg:24-bit |
 | ln  | javascript  | 语 言      | navigator.language eg:zh-CN |
